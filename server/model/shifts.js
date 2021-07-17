@@ -5,21 +5,33 @@
  * @returns 
  */
 const findShiftsBasedOnRestrict = (query, shifts) => {
+    console.log(shifts)
     if (query.start_time != undefined && query.end_time != undefined) {
-        console.log("hit this block")
-        return shifts.filter(e => {
+        shifts = shifts.filter(e => {
             return e.start_time >= query.start_time && e.end_time <= query.end_time
         })
-    } else if (query.end_time) {
-        return shifts.filter(e => {
+    }
+    if (query.end_time) {
+        shifts = shifts.filter(e => {
             return e.end_time <= query.end_time
         })
-    } else {
-        return shifts.filter(e => {
+    }
+    if (query.start_time) {
+        shifts = shifts.filter(e => {
             return e.start_time >= query.start_time
 
         })
     }
+    if (query.sort) {
+        console.log("hitted this block")
+        shifts = shifts.sort((a, b) => {
+            date1 = new Date(a.created_at);
+            date2 = new Date(b.created_at);
+            return query.sort == "aesc" ? date1 - date2 : date2 - date1
+        })
+    }
+    console.log(shifts)
+    return shifts
 }
 
 /**
@@ -72,7 +84,8 @@ const validShiftBasedOnTimeInterval = (validObj, shifts) => {
 const postNewShiftToDb = (shiftObj, shifts) => {
     let fs = require("fs")
     shifts.push(shiftObj)
-    fs.writeFileSync('data.json', JSON.stringify(shifts, null, '\t'));
+    fs.writeFileSync('shifts.json', JSON.stringify(shifts, null, '\t'));
+    return shiftObj
 }
 
 /**
@@ -83,10 +96,10 @@ const postNewShiftToDb = (shiftObj, shifts) => {
 const updateShifts = (updateShift, shifts) => {
     let fs = require("fs")
     let newShifts = shifts.map(e => {
-        //todo: fix the shallow copy
+        updateShift.index = e.index
         return e.id == updateShift.id ? updateShift : e
     })
-    fs.writeFileSync('data.json', JSON.stringify(newShifts, null, '\t'));
+    fs.writeFileSync('shifts.json', JSON.stringify(newShifts, null, '\t'));
     return newShifts
 }
 
@@ -95,6 +108,7 @@ const deleteShift = (id, shifts) => {
     var filtered = shifts.filter((e) => {
         return e.id != id
     });
-    fs.writeFileSync('data.json', JSON.stringify(filtered, null, '\t'));
+    fs.writeFileSync('shifts.json', JSON.stringify(filtered, null, '\t'));
+    return "ok"
 }
 module.exports = { findShiftsBasedOnRestrict, findShiftBasedOnId, validShiftBasedOnTimeInterval, postNewShiftToDb, updateShifts, deleteShift }
